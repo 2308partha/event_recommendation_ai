@@ -1,0 +1,251 @@
+Build a scalable AI-powered college event recommendation backend system using FastAPI, MongoDB, LangChain, Sentence Transformers, and FAISS/Chroma vector search.
+
+Project Goal:
+Create an intelligent hybrid recommendation system for college events where recommendations are generated using:
+
+* semantic similarity
+* user interests
+* skills
+* hobbies
+* previous registrations
+* attended events
+* event popularity
+* location distance
+* event recency
+* intercollege preferences
+
+Architecture Requirements:
+
+Use:
+
+* FastAPI backend
+* MongoDB database
+* Pydantic models
+* LangChain orchestration
+* Sentence Transformers embeddings
+* FAISS or Chroma vector database
+* Clean scalable folder architecture
+
+Main Collections:
+
+1. users
+2. events
+3. registrations
+4. verifications
+5. user_location_preferences
+
+User Model:
+Store:
+
+* clerk_user_id
+* name
+* email
+* image_url
+* college_name
+* department
+* interests
+* skills
+* hobbies
+* preferred_categories
+* current_location
+* intercollege boolean preference
+
+Event Model:
+Store:
+
+* title
+* description
+* date
+* location name
+* latitude
+* longitude
+* category
+* tags
+* max_attendees
+* organizing_club
+* conducting_college
+* image_url
+* registration_count
+* attendance_count
+* event_mode
+* special_notes
+* special_requirements
+
+Registration Model:
+Store:
+
+* user_id
+* event_id
+* registration_date
+* attended
+* checked_in
+* team_name
+* team_members
+* feedback_rating
+* feedback_text
+
+Main Recommendation Logic:
+
+STEP 1 — Location Processing
+When user enters location:
+
+* backend should call geocoding API
+* convert location name into latitude and longitude
+* store coordinates in database
+
+Use:
+
+* OpenStreetMap Nominatim API OR Google Maps Geocoding API
+
+STEP 2 — Event Geo Processing
+When event is created:
+
+* event location should also be converted into latitude and longitude
+* store coordinates inside event document
+
+STEP 3 — Intercollege Mode Logic
+
+IF:
+intercollege == false
+
+THEN:
+
+* recommend ONLY same college events
+* no cross-college recommendations
+
+IF:
+intercollege == true
+
+THEN:
+
+* allow nearby college events
+* calculate geographical distance between user and event
+* prioritize nearby events
+
+STEP 4 — Candidate Retrieval Layer
+
+First apply filters:
+
+* same college or intercollege logic
+* category filter
+* upcoming events only
+* registration open
+* location radius filtering
+* date filtering
+
+This should generate candidate events.
+
+STEP 5 — Semantic Recommendation Layer
+
+Use Sentence Transformers embeddings to create semantic vectors for:
+
+* event title
+* event description
+* event tags
+* user interests
+* user skills
+* user hobbies
+* previously attended events
+
+Perform semantic similarity search using FAISS/Chroma.
+
+STEP 6 — Behavioral Recommendation Layer
+
+Use:
+
+* previous registrations
+* attended events
+* event categories attended previously
+* user engagement
+
+to strengthen recommendation scores.
+
+Attended events should have higher importance than just registered events.
+
+STEP 7 — Ranking Layer
+
+Final recommendation score should combine:
+
+1. Semantic similarity
+2. Distance score
+3. Event popularity
+4. Registration count
+5. Previous attendance behavior
+6. User interests
+7. User skills
+8. Event recency
+9. Upcoming event priority
+
+Events happening sooner should get higher priority.
+
+Events with high registration count should also receive ranking boosts.
+
+Create weighted scoring logic.
+
+Example:
+
+final_score =
+semantic_similarity * 0.4 +
+interest_match * 0.2 +
+behavior_score * 0.15 +
+distance_score * 0.1 +
+trending_score * 0.1 +
+recency_score * 0.05
+
+STEP 8 — AI Recommendation Feed
+
+Generate:
+
+* personalized recommendation feed
+* nearby events feed
+* trending events feed
+* upcoming events feed
+
+STEP 9 — Admin Analytics
+
+Event admins should be able to see:
+
+* total registrations
+* attendance count
+* popularity metrics
+* engagement analytics
+
+Technical Requirements:
+
+* modular architecture
+* controllers
+* services
+* validators
+* routes
+* vector services
+* recommendation services
+* geolocation services
+
+Implement:
+
+* vector embedding generation
+* semantic search service
+* recommendation engine
+* geolocation utility
+* ranking utility
+* MongoDB indexing
+* scalable API structure
+
+Backend should be production-style and scalable.
+
+Recommendation Architecture Must Follow:
+
+Filter First
+↓
+Candidate Retrieval
+↓
+Semantic Search
+↓
+Behavioral Ranking
+↓
+Final Recommendation Feed
+
+Do NOT use only simple category matching.
+Use AI semantic recommendation with embeddings and hybrid ranking.
+
+Generate complete backend architecture, models, services, recommendation pipeline, and API flow.
