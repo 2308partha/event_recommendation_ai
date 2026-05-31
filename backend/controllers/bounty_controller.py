@@ -6,13 +6,20 @@ from datetime import datetime
 
 async def create_bounty_controller(bounty_data: BountyCreateModel, clerk_user):
     claims = clerk_user if isinstance(clerk_user, dict) else getattr(clerk_user, "claims", {})
-    admin_clerk_id = claims.get("sub")
+    clerk_id = claims.get("sub")
     
-    admin_doc = await admin_collection.find_one({"clerk_user_id": admin_clerk_id})
-    organiser_type = admin_doc.get("organiser_type", "college") if admin_doc else "college"
+    admin_doc = await admin_collection.find_one({"clerk_user_id": clerk_id})
+    user_doc = await user_collection.find_one({"clerk_user_id": clerk_id})
     
+    if admin_doc:
+        organiser_type = admin_doc.get("organiser_type", "college")
+    elif user_doc:
+        organiser_type = "community"
+    else:
+        organiser_type = "community"
+        
     bounty_dict = bounty_data.model_dump(mode="json")
-    bounty_dict["organiser_id"] = admin_clerk_id
+    bounty_dict["organiser_id"] = clerk_id
     bounty_dict["organiser_type"] = organiser_type
     
     # We might want to store organiser name. Let's get it from clerk claims if possible, or fallback
@@ -20,6 +27,7 @@ async def create_bounty_controller(bounty_data: BountyCreateModel, clerk_user):
     bounty_dict["status"] = "open"
     bounty_dict["created_at"] = str(datetime.utcnow())
     bounty_dict["assigned_to"] = None
+    bounty_dict["applicants"] = []
 
     result = await bounty_collection.insert_one(bounty_dict)
     bounty_id = str(result.inserted_id)
@@ -38,6 +46,7 @@ async def get_open_bounties_controller():
         doc["id"] = doc["_id"]
         # Make sure frontend fields exist
         doc["organiser"] = doc.get("organiser_name", "Organiser")
+        doc["applicants"] = doc.get("applicants", [])
         bounties.append(doc)
     return bounties
 
@@ -51,7 +60,7 @@ async def get_admin_bounties_controller(admin_clerk_id: str):
         bounties.append(doc)
     return bounties
 
-async def accept_bounty_controller(bounty_id: str, clerk_user):
+async def apply_bounty_controller(bounty_id: str, clerk_user):
     claims = clerk_user if isinstance(clerk_user, dict) else getattr(clerk_user, "claims", {})
     student_clerk_id = claims.get("sub")
     
@@ -67,10 +76,34 @@ async def accept_bounty_controller(bounty_id: str, clerk_user):
         
     await bounty_collection.update_one(
         {"_id": ObjectId(bounty_id)},
-        {"$set": {"status": "in_progress", "assigned_to": student_clerk_id}}
+        {"$addToSet": {"applicants": student_clerk_id}}
     )
     
-    return {"message": "Bounty accepted successfully"}
+    return {"message": "Applied to bounty successfully"}
+
+async def approve_applicant_controller(bounty_id: str, applicant_id: str, clerk_user):
+    claims = clerk_user if isinstance(clerk_user, dict) else getattr(clerk_user, "claims", {})
+    organiser_id = claims.get("sub")
+    
+    if not ObjectId.is_valid(bounty_id):
+        raise HTTPException(status_code=400, detail="Invalid bounty ID")
+        
+    doc = await bounty_collection.find_one({"_id": ObjectId(bounty_id)})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Bounty not found")
+        
+    if doc.get("organiser_id") != organiser_id:
+        raise HTTPException(status_code=403, detail="Not authorized to approve applicants for this bounty")
+        
+    if doc.get("status") != "open":
+        raise HTTPException(status_code=400, detail="Bounty is no longer open")
+        
+    await bounty_collection.update_one(
+        {"_id": ObjectId(bounty_id)},
+        {"$set": {"status": "in_progress", "assigned_to": applicant_id}}
+    )
+    
+    return {"message": "Applicant approved successfully"}
 
 async def complete_bounty_controller(bounty_id: str, admin_clerk_id: str):
     if not ObjectId.is_valid(bounty_id):

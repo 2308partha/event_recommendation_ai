@@ -41,7 +41,7 @@ async def evaluate_candidates_with_ai(db: AsyncIOMotorDatabase, user_profile: di
     llm = ChatGoogleGenerativeAI(
         model="gemini-2.5-flash",
         temperature=0.2,
-        response_format={"type": "json_object"}
+        response_schema={"type": "json_object"}
     )
     chain = recommendation_prompt | llm | JsonOutputParser()
     

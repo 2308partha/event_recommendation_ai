@@ -85,3 +85,28 @@ function getOfflineChatbotResponse(message: string): string {
   }
   return "Hello! I am Nexus AI, your campus assistant. I can give you real-time details about the 'National GenAI Hackathon', competitive coding meets at IIT Kharagpur, or cultural fests. What would you like to know?";
 }
+
+export async function getRecommendedPeers(userId: string = 'mock_user_12345'): Promise<any[]> {
+  try {
+    const url = `${API_BASE}/api/networking/mentors?user_id=${userId}`;
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch peers: ${response.statusText}`);
+    }
+
+    const json = await response.json();
+    if (json.success && Array.isArray(json.data)) {
+      return json.data;
+    }
+    return [];
+  } catch (error) {
+    console.error("Failed to fetch recommended peers.", error);
+    return [];
+  }
+}

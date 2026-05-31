@@ -27,6 +27,7 @@ import Mentorship from "./pages/student/Mentorship";
 import HackerRoom from "./pages/student/HackerRoom";
 import VenueProviderVerify from "./pages/VenueProvider/VenueProviderVerify";
 import VenueDashboard from "./pages/VenueProvider/VenueDashboard";
+import UserAnalytics from "./pages/student/UserAnalytics";
 
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -68,7 +69,8 @@ export default function App() {
                 <Route path="/student/incubator" element={<IncubationDashboard />} />
                 <Route path="/student/bounties" element={<BountyBoard />} />
                 <Route path="/student/mentorship" element={<Mentorship />} />
-                <Route path="/student/hacker-room/:roomId" element={<HackerRoom />} />
+                <Route path="/student/peer-network" element={<HackerRoom />} />
+                <Route path="/student/analytics" element={<UserAnalytics />} />
               </Route>
             </Route>
 

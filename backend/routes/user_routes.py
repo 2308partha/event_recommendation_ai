@@ -4,7 +4,8 @@ from models.user_model import UserUpdateModel, UserCreateModel
 from controllers.user_controller import (
     create_user_controller,
     get_user_controller,
-    update_user_controller
+    update_user_controller,
+    get_user_analytics_controller
 )
 
 router = APIRouter()
@@ -23,3 +24,7 @@ async def update_user_route(
     clerk_user = Depends(verify_clerk_token)
 ):
     return await update_user_controller(clerk_user, update_data)
+
+@router.get("/me/analytics")
+async def get_user_analytics_route(clerk_user = Depends(verify_clerk_token)):
+    return await get_user_analytics_controller(clerk_user)

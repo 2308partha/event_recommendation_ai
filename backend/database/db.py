@@ -7,8 +7,10 @@ client = AsyncIOMotorClient(DATABASE_URL)
 
 
 # DATABASE
-
-db = client["event_recommendation_ai"]
+try:
+    db = client.get_default_database()
+except Exception:
+    db = client["event_recommendation_ai"]
 
 
 # COLLECTIONS

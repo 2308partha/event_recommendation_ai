@@ -23,6 +23,7 @@ from routes.hacker_room_routes import router as hacker_room_router
 from routes.registration_routes import router as registration_router
 from routes.skill_routes import router as skill_router
 from routes.venue_routes import router as venue_router
+from routes.networking_router import router as networking_router
 from routes.recommendation_router import router as github_rec_router
 from routes.chat_router import router as github_chat_router
 
@@ -64,6 +65,7 @@ app.include_router(hacker_room_router, prefix="/api/hacker-rooms", tags=["Hacker
 app.include_router(registration_router, prefix="/api", tags=["Registrations"])
 app.include_router(skill_router, prefix="/api/skills", tags=["Skills"])
 app.include_router(venue_router, prefix="/api/venues", tags=["Venues"])
+app.include_router(networking_router, prefix="/api/networking", tags=["Networking"])
 
 # Coder Branch Discovery and Chatbot Routers (prefixed under github-feed per partha branch layout)
 app.include_router(github_rec_router, prefix="/api/v1/github-feed", tags=["Github Feed"])

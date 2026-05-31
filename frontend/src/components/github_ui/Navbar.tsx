@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useEvents } from '../../hooks/useGithubEvents';
-import { Search, Bell, Moon, Sun, CheckCircle2, Calendar, Hash, GraduationCap, Target, BrainCircuit, MapPin, Building2, PlusCircle, LayoutDashboard } from 'lucide-react';
+import { Search, Bell, Moon, Sun, CheckCircle2, Calendar, Hash, GraduationCap, Target, BrainCircuit, MapPin, Building2, PlusCircle, LayoutDashboard, LineChart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { UserButton, useUser as useClerkUser } from '@clerk/clerk-react';
@@ -75,7 +75,7 @@ export const Navbar: React.FC = () => {
           <div className="hidden lg:flex items-center gap-2 mr-2">
             {role === 'student' && (
               <>
-                <Link to="/student/hacker-room/team-alpha" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-blue-500/10 text-blue-500 dark:text-blue-400 text-xs font-bold transition-colors">
+                <Link to="/student/peer-network" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-blue-500/10 text-blue-500 dark:text-blue-400 text-xs font-bold transition-colors">
                   <Hash className="w-3.5 h-3.5" /> Team
                 </Link>
                 <Link to="/student/mentorship" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-purple-500/10 text-purple-600 dark:text-purple-400 text-xs font-bold transition-colors">
@@ -86,6 +86,9 @@ export const Navbar: React.FC = () => {
                 </Link>
                 <Link to="/student/skills" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-violet-500/10 text-violet-600 dark:text-violet-400 text-xs font-bold transition-colors">
                   <BrainCircuit className="w-3.5 h-3.5" /> Skills
+                </Link>
+                <Link to="/student/analytics" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400 text-xs font-bold transition-colors">
+                  <LineChart className="w-3.5 h-3.5" /> Analytics
                 </Link>
               </>
             )}
