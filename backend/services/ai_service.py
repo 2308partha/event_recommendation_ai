@@ -18,26 +18,43 @@ def _safe_str(val) -> str:
     return str(val or "").replace("{", "").replace("}", "").strip()[:300]
 
 def _build_prompt(user_data: dict) -> str:
-    # Notice we no longer ask it to extract the text, just to verify it!
-    return f"""
-    You are an advanced AI validation and fraud-detection assistant for an Organizer verification system.
-    The user claims:
-      - Name: '{_safe_str(user_data.get('full_name'))}'
-      - College: '{_safe_str(user_data.get('college_name'))}'
-      - Organization: '{_safe_str(user_data.get('organization'))}'
-      - Department: '{_safe_str(user_data.get('department'))}'
-      - Position: '{_safe_str(user_data.get('post'))}'
-      - Year of Study: '{_safe_str(user_data.get('year_of_study'))}'
-      
-    Analyze the provided ID card image and perform STRICT validations.
-    Check the following and return true/false for each:
-    1. name_match: Is the name on the ID card reasonably similar to the claimed name?
-    2. college_match: Does the ID card visibly mention the claimed college?
-    3. year_valid: Does the ID card indicate they are a current student with a year of studying in 3rd or final year (e.g., not expired)?
-    4. is_authentic: Does the ID look genuine (no obvious photoshop/digital alteration)?
+    organiser_type = user_data.get('organiser_type', 'college')
     
-    If ANY of the above checks are false, set "is_valid" to false and provide a clear "reason".
-    If ALL checks are true, set "is_valid" to true and set reason to "Approved".
+    if organiser_type == 'college':
+        org_check = f"2. college_match: Does the ID card visibly mention the claimed college '{_safe_str(user_data.get('college_name'))}'?"
+        status_check = "3. year_valid: Does the ID card indicate they are a current student with a year of studying in 3rd or final year (e.g., not expired)?"
+        extra_checks = ""
+    elif organiser_type == 'venue_provider':
+        org_check = f"2. college_match: Does the document/ID visibly mention the claimed venue institution '{_safe_str(user_data.get('organization'))}'?"
+        status_check = "3. year_valid: Does this look like an official, valid document belonging to the institution?"
+        extra_checks = """
+        Also, evaluate the following for the Venue Provider:
+        5. capacity_check: Does the document or any provided images indicate this is a legitimate physical venue? (Return True if yes)
+        6. trust_score: Assign an integer between 0 and 100 representing how confident you are this is a real, high-quality venue provider.
+        """
+    else:
+        org_check = f"2. college_match: Does the ID card visibly mention the claimed company/organization '{_safe_str(user_data.get('company_name') or user_data.get('organization'))}'?"
+        status_check = "3. year_valid: Does the ID card appear to be a valid, unexpired professional/employee ID?"
+        extra_checks = ""
+
+    return f"""
+    You are an advanced AI validation and fraud-detection assistant for a marketplace verification system.
+    The user claims:
+      - Account Type: '{organiser_type}'
+      - Name: '{_safe_str(user_data.get('full_name'))}'
+      - Organization/College: '{_safe_str(user_data.get('organization'))}'
+      - Position/Designation: '{_safe_str(user_data.get('post') or user_data.get('designation'))}'
+      
+    Analyze the provided images and perform STRICT validations.
+    Check the following and return true/false for each:
+    1. name_match: Is the name on the document reasonably similar to the claimed name? (If no name is claimed or required, assume true)
+    {org_check}
+    {status_check}
+    4. is_authentic: Does the document look genuine (no obvious photoshop/digital alteration)?
+    {extra_checks}
+    
+    If ANY of the core checks (1-4) are false, set "is_valid" to false and provide a clear "reason".
+    If ALL core checks are true, set "is_valid" to true and set reason to "Approved".
     """
 
 def _parse_ai_response(ai_text: str) -> dict:
@@ -66,11 +83,12 @@ def _parse_ai_response(ai_text: str) -> dict:
             "reason": data.get("reason", "No reason provided."),
             "is_valid": bool(data.get("is_valid", False)),
             "extracted": {
-                # We return the booleans now instead of the raw strings
                 "name_match": data.get("name_match", False),
                 "college_match": data.get("college_match", False),
                 "year_valid": data.get("year_valid", False),
                 "is_authentic": data.get("is_authentic", False),
+                "trust_score": data.get("trust_score", 80),
+                "capacity_check": data.get("capacity_check", True)
             },
         }
     except Exception as e:
@@ -96,6 +114,7 @@ class AIService:
         prompt = _build_prompt(user_data)
 
         from pydantic import BaseModel
+        from typing import Optional
         
         # CHANGED: We now ask for Booleans instead of Strings to bypass the PII filter!
         class IDAnalysisResult(BaseModel):
@@ -105,6 +124,8 @@ class AIService:
             is_authentic: bool
             is_valid: bool
             reason: str
+            capacity_check: Optional[bool] = None
+            trust_score: Optional[int] = None
 
         contents = [
             types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
