@@ -6,13 +6,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-# Ensure local environment variables and credentials (GEMINI_API_KEY) are loaded right at bootup
+# Ensure local environment variables and credentials are loaded right at bootup
 load_dotenv()
 
-# Import database core injection provider directly from your root file
+# Import database core injection provider
 from database.db import db
 
-# Import all routers from partha and coder branches
+# Import all routers from both branches
 from routes.user_routes import router as user_router
 from routes.admin_routes import router as admin_router
 from routes.event_routes import router as event_router
@@ -23,6 +23,7 @@ from routes.hacker_room_routes import router as hacker_room_router
 from routes.registration_routes import router as registration_router
 from routes.skill_routes import router as skill_router
 from routes.venue_routes import router as venue_router
+from routes.marketplace_router import router as marketplace_router
 from routes.networking_router import router as networking_router
 from routes.recommendation_router import router as github_rec_router
 from routes.chat_router import router as github_chat_router
@@ -33,7 +34,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Configure essential standard CORS rules for seamless frontend connection
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -54,7 +55,7 @@ async def home():
         "engine": "Nexus AI Core Recommendation System Running"
     }
 
-# ── Register all routes from both branches ──────────────────────────────────────────
+# ── Register all routes ──────────────────────────────────────────
 app.include_router(user_router, prefix="/api", tags=["Users"])
 app.include_router(admin_router, prefix="/api", tags=["Admin"])
 app.include_router(event_router, prefix="/api", tags=["Events"])
@@ -65,9 +66,10 @@ app.include_router(hacker_room_router, prefix="/api/hacker-rooms", tags=["Hacker
 app.include_router(registration_router, prefix="/api", tags=["Registrations"])
 app.include_router(skill_router, prefix="/api/skills", tags=["Skills"])
 app.include_router(venue_router, prefix="/api/venues", tags=["Venues"])
+app.include_router(marketplace_router, prefix="/api/marketplace", tags=["Marketplace"])
 app.include_router(networking_router, prefix="/api/networking", tags=["Networking"])
 
-# Coder Branch Discovery and Chatbot Routers (prefixed under github-feed per partha branch layout)
+# Coder Branch Discovery and Chatbot Routers
 app.include_router(github_rec_router, prefix="/api/v1/github-feed", tags=["Github Feed"])
 app.include_router(github_chat_router, prefix="/api/v1/github-feed", tags=["Github Chatbot"])
 
@@ -82,17 +84,14 @@ async def seed_mock_data(db: AsyncIOMotorDatabase = Depends(get_db)):
     to validate your LangChain recommendation engine logic.
     """
     try:
-        # 1. Clear existing test artifacts to prevent document duplication conflicts
         await db["users"].delete_many({})
         await db["events"].delete_many({})
 
-        # 2. Build explicit naive timestamps to guarantee mathematical operations inside phase2 work perfectly
         future_deadline = datetime.utcnow() + timedelta(days=2)
         extended_date = datetime.utcnow() + timedelta(days=5)
 
-        # 3. Seed a Mock Student User Profile matching your structural architecture layouts
         mock_user = {
-            "_id": "mock_user_12345",  # Baseline mock user ID used by your recommendation route
+            "_id": "mock_user_12345",
             "name": "Sourav Sen",
             "email": "souravsen6378@gmail.com",
             "branch": "Mathematics and Computing",
@@ -101,14 +100,13 @@ async def seed_mock_data(db: AsyncIOMotorDatabase = Depends(get_db)):
             "interests": ["Generative AI", "Competitive Programming", "Web Development", "Hackathons"],
             "friends_ids": ["peer_user_99", "peer_user_88"],
             "registered_events": [],
-            "coordinates": [87.2913, 23.5477],  # NIT Durgapur Base Geo-Coordinates
+            "coordinates": [87.2913, 23.5477],
             "coins": 120,
             "badges": ["Beta Explorer"],
             "created_at": datetime.utcnow()
         }
         await db["users"].insert_one(mock_user)
 
-        # 4. Seed Structured Events (Varying host institute rankings, tags, and registrations)
         mock_events = [
             {
                 "title": "National GenAI Hackathon 2026",
@@ -120,7 +118,7 @@ async def seed_mock_data(db: AsyncIOMotorDatabase = Depends(get_db)):
                 "location_geo": {"type": "Point", "coordinates": [87.2915, 23.5480]},
                 "tags": ["Generative AI", "Python", "Hackathons", "LangChain"],
                 "registration_count": 87,
-                "registered_participants": ["peer_user_99", "peer_user_88"],  # 2 of your friends are attending!
+                "registered_participants": ["peer_user_99", "peer_user_88"],
                 "registration_deadline": future_deadline,
                 "event_date": extended_date,
                 "is_open": True,
@@ -130,7 +128,7 @@ async def seed_mock_data(db: AsyncIOMotorDatabase = Depends(get_db)):
                 "title": "Advanced Data Structures & Competitive Meetup",
                 "description": "Mastering complex graph matrices and algorithmic tree pruning strategies using optimized standard C++ paradigms.",
                 "host_college": "IIT Kharagpur",
-                "nirf_ranking": 6,  # Elite Top 10 NIRF institution tier!
+                "nirf_ranking": 6,
                 "is_intercollege": True,
                 "location_name": "IIT KGP Campus",
                 "location_geo": {"type": "Point", "coordinates": [87.3100, 22.3100]},
@@ -144,8 +142,6 @@ async def seed_mock_data(db: AsyncIOMotorDatabase = Depends(get_db)):
             }
         ]
         await db["events"].insert_many(mock_events)
-
-        # 5. Enforce Geospatial 2dsphere indexing right after document creation
         await db["events"].create_index([("location_geo", "2dsphere")])
 
         return {
@@ -163,7 +159,6 @@ async def seed_mock_data(db: AsyncIOMotorDatabase = Depends(get_db)):
 if __name__ == "__main__":
     import uvicorn
     
-    # Calculate the exact directory path where your server code lives
     base_dir = os.path.dirname(os.path.abspath(__file__))
     
     uvicorn.run(
@@ -171,7 +166,6 @@ if __name__ == "__main__":
         host="127.0.0.1", 
         port=8000, 
         reload=True,
-        # ─── EXTRA CAREFUL PATH EXCLUSIONS ──────────────────────────────────
         reload_excludes=[
             "*.pyc", 
             "*_db", 

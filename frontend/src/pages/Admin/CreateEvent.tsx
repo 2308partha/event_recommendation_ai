@@ -23,7 +23,10 @@ export default function CreateEvent() {
     registration_deadline: "",
     location_name: "",
     max_team_size: 1,
-    is_team_event: false
+    is_team_event: false,
+    budget: 0,
+    expected_attendees: 0,
+    required_resources: [] as string[]
   });
 
   const handleCreateEvent = async (e: React.FormEvent) => {
@@ -122,8 +125,51 @@ export default function CreateEvent() {
                   )}
                 </div>
 
+                {/* --- MARKETPLACE REQUIREMENTS --- */}
+                <div className="p-6 rounded-2xl bg-gradient-to-br from-violet-500/5 to-fuchsia-500/5 border border-violet-500/20 space-y-6">
+                  <div className="space-y-1">
+                    <h3 className="text-xl font-bold text-violet-400">Marketplace Requirements</h3>
+                    <p className="text-sm text-muted-foreground">Specify your budget and needs to get AI-matched with the best providers.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-base">Total Budget (INR)</Label>
+                      <Input type="number" min={0} placeholder="e.g. 50000" value={eventData.budget} onChange={e => setEventData({...eventData, budget: parseInt(e.target.value) || 0})} className="bg-black/40 border-white/10 h-12" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-base">Expected Attendees</Label>
+                      <Input type="number" min={0} placeholder="e.g. 500" value={eventData.expected_attendees} onChange={e => setEventData({...eventData, expected_attendees: parseInt(e.target.value) || 0})} className="bg-black/40 border-white/10 h-12" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label className="text-base">Resource Requirements</Label>
+                    <div className="flex flex-wrap gap-3">
+                      {["Venue", "Vendor", "Sponsor", "Speaker", "Community"].map((resource) => (
+                        <label key={resource} className={`flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer border transition-colors ${eventData.required_resources.includes(resource) ? 'bg-violet-600/20 border-violet-500 text-violet-300' : 'bg-black/40 border-white/10 hover:border-white/30 text-slate-300'}`}>
+                          <input 
+                            type="checkbox" 
+                            className="hidden"
+                            checked={eventData.required_resources.includes(resource)}
+                            onChange={(e) => {
+                              const curr = eventData.required_resources;
+                              if (e.target.checked) {
+                                setEventData({...eventData, required_resources: [...curr, resource]});
+                              } else {
+                                setEventData({...eventData, required_resources: curr.filter(r => r !== resource)});
+                              }
+                            }}
+                          />
+                          <span className="text-sm font-semibold">{resource}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
                 <Button type="submit" disabled={loading} className="w-full h-14 text-lg mt-8 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20">
-                  {loading ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Publishing...</> : "Publish Event"}
+                  {loading ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Publishing...</> : "Publish Event & Find Providers"}
                 </Button>
               </form>
             </CardContent>

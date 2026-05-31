@@ -25,9 +25,10 @@ import IncubationDashboard from "./pages/student/IncubationDashboard";
 import BountyBoard from "./pages/student/BountyBoard";
 import Mentorship from "./pages/student/Mentorship";
 import HackerRoom from "./pages/student/HackerRoom";
+import Profile from "./pages/student/Profile";
+import UserAnalytics from "./pages/student/UserAnalytics";
 import VenueProviderVerify from "./pages/VenueProvider/VenueProviderVerify";
 import VenueDashboard from "./pages/VenueProvider/VenueDashboard";
-import UserAnalytics from "./pages/student/UserAnalytics";
 
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -64,11 +65,13 @@ export default function App() {
             <Route element={<RouteGuard requireAuth={true} allowedRole="student" />}>
               <Route element={<SharedLayout />}>
                 <Route path="/student/dashboard" element={<StudentDashboard />} />
+                <Route path="/student/profile" element={<Profile />} />
                 <Route path="/student/events/:eventId" element={<EventDetails />} />
                 <Route path="/student/skills" element={<SkillSandbox />} />
                 <Route path="/student/incubator" element={<IncubationDashboard />} />
                 <Route path="/student/bounties" element={<BountyBoard />} />
                 <Route path="/student/mentorship" element={<Mentorship />} />
+                <Route path="/student/hacker-room/:roomId" element={<HackerRoom />} />
                 <Route path="/student/peer-network" element={<HackerRoom />} />
                 <Route path="/student/analytics" element={<UserAnalytics />} />
               </Route>

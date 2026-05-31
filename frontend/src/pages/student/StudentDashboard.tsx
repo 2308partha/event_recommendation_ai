@@ -6,11 +6,14 @@ import { TrendingCarousel } from '../../components/github_ui/TrendingCarousel';
 import { RecommendedSection } from '../../components/github_ui/RecommendedSection';
 import { TimelineView } from '../../components/github_ui/TimelineView';
 import { EventCard } from '../../components/github_ui/EventCard';
-import { Calendar, RefreshCcw } from 'lucide-react';
+import { Calendar, RefreshCcw, LayoutGrid, Network } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { AntigravityNetwork } from '../../components/github_ui/AntigravityNetwork';
+import { RegistrationModal } from '../../components/github_ui/RegistrationModal';
 
 const DashboardContent: React.FC = () => {
-  const { filteredEvents, events, resetFilters, isLoading } = useEvents();
+  const { filteredEvents, events, resetFilters, isLoading, selectedEventForRegistration, setSelectedEventForRegistration, registerForEvent } = useEvents();
+  const [viewMode, setViewMode] = React.useState<'grid' | 'network'>('grid');
 
   // Extract recently added events (e.g., sorted by creation date, top 4)
   const recentlyAdded = [...events]
@@ -18,7 +21,14 @@ const DashboardContent: React.FC = () => {
     .slice(0, 4);
 
   return (
-    <div className="space-y-10 pb-16">
+    <div className="space-y-10 pb-16 relative">
+      <RegistrationModal 
+        event={selectedEventForRegistration}
+        isOpen={!!selectedEventForRegistration}
+        onClose={() => setSelectedEventForRegistration(null)}
+        onSubmit={registerForEvent}
+      />
+      
       {/* Hero Section */}
       <HeroSection />
 
@@ -46,10 +56,30 @@ const DashboardContent: React.FC = () => {
                   Showing {filteredEvents.length} {filteredEvents.length === 1 ? 'event' : 'events'} matched
                 </p>
               </div>
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900/50 p-1 rounded-lg border border-slate-200 dark:border-slate-800">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-colors ${viewMode === 'grid' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                >
+                  <LayoutGrid className="w-3.5 h-3.5" />
+                  Grid
+                </button>
+                <button
+                  onClick={() => setViewMode('network')}
+                  className={`p-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-colors ${viewMode === 'network' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                >
+                  <Network className="w-3.5 h-3.5" />
+                  Antigravity
+                </button>
+              </div>
             </div>
 
-            {/* Main Events Feed Grid */}
-            {isLoading ? (
+            {/* Content Area Based on View Mode */}
+            {viewMode === 'network' ? (
+              <div className="w-full rounded-3xl overflow-hidden border border-slate-200/50 dark:border-slate-800 shadow-sm">
+                <AntigravityNetwork />
+              </div>
+            ) : isLoading ? (
               <div className="py-20 text-center text-xs text-muted-foreground animate-pulse">
                 Applying filter queries...
               </div>

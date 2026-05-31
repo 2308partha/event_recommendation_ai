@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends
-# Import the new student lock here
 from middleware.auth_middleware import verify_clerk_token, verify_admin_role, verify_student_role
 from models.event_model import EventCreateModel
 from controllers.event_controller import (
@@ -28,10 +27,9 @@ async def get_my_created_events_route(
     admin_id = claims.get("sub")
     return await get_admin_events_controller(admin_id)
 
-# 🔒 STUDENTS ONLY: Get all events (Global Feed)
-# We added Depends(verify_student_role) here!
+# 🔓 ANY AUTHENTICATED USER: Get all events (Global Feed — admins + students both need this)
 @router.get("/events")
-async def get_all_events_route(clerk_user = Depends(verify_student_role)):
+async def get_all_events_route(clerk_user = Depends(verify_clerk_token)):
     return await get_all_events_controller()
 
 # 🔓 EVERYONE: Get single event details (both students and admins need to see details)

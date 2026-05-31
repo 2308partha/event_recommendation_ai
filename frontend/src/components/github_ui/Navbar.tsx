@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useEvents } from '../../hooks/useGithubEvents';
-import { Search, Bell, Moon, Sun, CheckCircle2, Calendar, Hash, GraduationCap, Target, BrainCircuit, MapPin, Building2, PlusCircle, LayoutDashboard, LineChart } from 'lucide-react';
+import { Search, Bell, Moon, Sun, CheckCircle2, Calendar, Hash, GraduationCap, Target, BrainCircuit, MapPin, Building2, PlusCircle, LayoutDashboard, LineChart, UserCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { UserButton, useUser as useClerkUser } from '@clerk/clerk-react';
@@ -87,8 +87,13 @@ export const Navbar: React.FC = () => {
                 <Link to="/student/skills" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-violet-500/10 text-violet-600 dark:text-violet-400 text-xs font-bold transition-colors">
                   <BrainCircuit className="w-3.5 h-3.5" /> Skills
                 </Link>
+<<<<<<< Updated upstream
                 <Link to="/student/analytics" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400 text-xs font-bold transition-colors">
                   <LineChart className="w-3.5 h-3.5" /> Analytics
+=======
+                <Link to="/student/profile" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-pink-500/10 text-pink-500 dark:text-pink-400 text-xs font-bold transition-colors">
+                  <UserCircle className="w-3.5 h-3.5" /> Profile
+>>>>>>> Stashed changes
                 </Link>
               </>
             )}

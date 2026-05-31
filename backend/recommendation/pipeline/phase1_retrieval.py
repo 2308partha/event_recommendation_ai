@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from typing import List
 
@@ -14,10 +14,11 @@ async def retrieve_surviving_candidates(
     Instantly drops past, closed, or geographically out-of-bounds events.
     If is_intra is True, filters strictly by same host_college.
     """
-    current_time = datetime.utcnow()
+    # Use datetime object for accurate BSON Date comparisons in MongoDB
+    current_time = datetime.now(timezone.utc)
     
     query = {
-        "registration_open": True,
+        "registration_open": {"$ne": False},
         "registration_deadline": {"$gte": current_time}
     }
     

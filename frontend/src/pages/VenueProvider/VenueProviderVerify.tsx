@@ -79,9 +79,9 @@ export default function VenueProviderVerify() {
             <div className="mx-auto w-16 h-16 rounded-2xl bg-purple-500/20 flex items-center justify-center mb-4">
               <Building2 className="h-8 w-8 text-purple-500" />
             </div>
-            <CardTitle className="text-3xl font-bold">Venue Provider Verification</CardTitle>
+            <CardTitle className="text-3xl font-bold">Provider Verification</CardTitle>
             <CardDescription className="text-base mt-2">
-              Verify your institution to start offering venues to community event organizers.
+              Submit proof of your services or business to get verified on the Marketplace.
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-8">
@@ -89,12 +89,12 @@ export default function VenueProviderVerify() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label>Institution / College Name</Label>
-                  <Input name="institution_name" value={formData.institution_name} onChange={handleChange} required className="bg-black/20 border-white/10" placeholder="e.g. MIT, Stanford..." />
+                  <Label>Business / Institution Name</Label>
+                  <Input name="institution_name" value={formData.institution_name} onChange={handleChange} required className="bg-black/20 border-white/10" placeholder="e.g. LensFlare Studios, MIT..." />
                 </div>
                 <div className="space-y-2">
-                  <Label>Complete Address</Label>
-                  <Input name="address" value={formData.address} onChange={handleChange} required className="bg-black/20 border-white/10" />
+                  <Label>Service / Provider Type (Proof Detail)</Label>
+                  <Input name="address" value={formData.address} onChange={handleChange} required className="bg-black/20 border-white/10" placeholder="e.g. Vendor, Photography, Sponsor..." />
                 </div>
                 <div className="space-y-2">
                   <Label>Contact Phone Number</Label>
@@ -108,7 +108,7 @@ export default function VenueProviderVerify() {
               
               <div className="pt-6 border-t border-white/5">
                 <Label className="mb-4 block text-lg font-semibold">
-                  Upload Official Institution ID / Document
+                  Upload Official Business ID / Portfolio Proof
                 </Label>
                 <div className="flex items-center justify-center w-full">
                   <label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-xl cursor-pointer bg-black/10 border-white/20 hover:bg-black/30 hover:border-purple-500/50 transition-colors">
@@ -127,6 +127,32 @@ export default function VenueProviderVerify() {
               <Button type="submit" disabled={loading} className="w-full h-12 text-lg mt-8 bg-purple-600 hover:bg-purple-700 text-white">
                 {loading ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Verifying...</> : "Submit for Verification"}
               </Button>
+
+              <div className="pt-4 text-center">
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  disabled={loading}
+                  onClick={async () => {
+                    setLoading(true);
+                    try {
+                      const res = await api.post("/api/venues/dev-bypass");
+                      if (res.data.approved) {
+                        toast.success("Dev Bypass Applied!");
+                        await user?.reload();
+                        navigate("/venue-provider/dashboard");
+                      }
+                    } catch(err) {
+                      toast.error("Dev bypass failed.");
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  className="text-xs text-muted-foreground hover:text-purple-400"
+                >
+                  Skip Verification & Use Seeded Data (Dev Mode)
+                </Button>
+              </div>
             </form>
           </CardContent>
         </Card>

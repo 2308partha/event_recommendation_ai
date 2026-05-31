@@ -11,9 +11,11 @@ interface EventsContextType {
   setFilters: React.Dispatch<React.SetStateAction<FilterState>>;
   resetFilters: () => void;
   toggleBookmark: (eventId: string) => void;
-  registerForEvent: (eventId: string) => boolean;
+  registerForEvent: (eventId: string, members: any[], teamName?: string) => Promise<boolean>;
   cancelRegistration: (eventId: string) => void;
   isLoading: boolean;
+  selectedEventForRegistration: Event | null;
+  setSelectedEventForRegistration: React.Dispatch<React.SetStateAction<Event | null>>;
 }
 
 const INITIAL_FILTERS: FilterState = {
@@ -65,19 +67,20 @@ export const EventsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       try {
         const res = await api.get('/api/v1/github-feed/events/recommendations');
         if (isMounted && res.data.success) {
-          // The backend returns scored packages in { event_data, semantic_score, ... }
-          const recommendedEvents = res.data.data.map((pkg: any) => ({
-             ...pkg.event_data,
+          // The backend returns an array of event objects directly, with scores merged in
+          const recommendedEvents = res.data.data.map((event: any) => ({
+             ...event,
              // Map backend fields to frontend interface if needed
-             registration_status: pkg.event_data.is_open ? "Open" : "Closed",
+             registration_status: event.registration_open ? "Open" : "Closed",
              status: "Upcoming",
-             scope: pkg.event_data.is_intercollege ? "Inter College" : "Intra College",
+             scope: event.intercollege ? "Inter College" : "Intra College",
              price: "Free",
-             banner_image: pkg.event_data.banner_url || "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1200&q=80",
-             created_at: new Date().toISOString(), // Mocking missing fields if necessary
+             banner_image: event.banner_url || "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1200&q=80",
+             created_at: event.created_at || new Date().toISOString(),
+             event_date: event.start_date || new Date().toISOString(),
              max_seats: 100,
-             rules: pkg.event_data.rules || ["Follow community guidelines"],
-             schedule: pkg.event_data.schedule || []
+             rules: event.rules || ["Follow community guidelines"],
+             schedule: event.schedule || []
           }));
           setEvents(recommendedEvents);
         }
@@ -168,6 +171,8 @@ export const EventsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const resetFilters = () => setFilters(INITIAL_FILTERS);
 
+  const [selectedEventForRegistration, setSelectedEventForRegistration] = useState<Event | null>(null);
+
   const toggleBookmark = (eventId: string) => {
     setUser(prev => {
       const exists = prev.bookmarked_events.includes(eventId);
@@ -178,42 +183,58 @@ export const EventsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
   };
 
-  const registerForEvent = (eventId: string): boolean => {
+  const registerForEvent = async (eventId: string, members: any[], teamName?: string): Promise<boolean> => {
     if (user.registered_events.includes(eventId)) return false;
 
     const event = events.find(e => e._id === eventId);
     if (!event || event.registration_status === 'Closed' || event.registration_count >= event.max_seats) return false;
 
-    // Increment registration count
-    setEvents(prev => prev.map(e => {
-      if (e._id === eventId) {
-        return { ...e, registration_count: e.registration_count + 1 };
-      }
-      return e;
-    }));
-
-    // Update user registrations, add coins, and unlock new badges!
-    setUser(prev => {
-      const nextRegistrations = [...prev.registered_events, eventId];
-      const nextCoins = prev.coins + 50; // Give 50 coins as a registration incentive!
-      const nextBadges = [...prev.badges];
-
-      if (nextRegistrations.length >= 3 && !nextBadges.includes("Active Attendee")) {
-        nextBadges.push("Active Attendee");
-      }
-      if (event.category === 'Hackathon' && !nextBadges.includes("Hackathon Builder")) {
-        nextBadges.push("Hackathon Builder");
-      }
-
-      return {
-        ...prev,
-        registered_events: nextRegistrations,
-        coins: nextCoins,
-        badges: nextBadges
+    try {
+      const payload = {
+        event_id: eventId,
+        team_name: teamName,
+        members: members
       };
-    });
 
-    return true;
+      const res = await api.post('/api/registrations', payload);
+      
+      if (res.status === 201 || res.status === 200) {
+        // Increment registration count
+        setEvents(prev => prev.map(e => {
+          if (e._id === eventId) {
+            return { ...e, registration_count: e.registration_count + 1 };
+          }
+          return e;
+        }));
+
+        // Update user registrations, add coins, and unlock new badges!
+        setUser(prev => {
+          const nextRegistrations = [...prev.registered_events, eventId];
+          const nextCoins = prev.coins + 50; // Give 50 coins as a registration incentive!
+          const nextBadges = [...prev.badges];
+
+          if (nextRegistrations.length >= 3 && !nextBadges.includes("Active Attendee")) {
+            nextBadges.push("Active Attendee");
+          }
+          if (event.category === 'Hackathon' && !nextBadges.includes("Hackathon Builder")) {
+            nextBadges.push("Hackathon Builder");
+          }
+
+          return {
+            ...prev,
+            registered_events: nextRegistrations,
+            coins: nextCoins,
+            badges: nextBadges
+          };
+        });
+
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error("Failed to register for event", err);
+      return false;
+    }
   };
 
   const cancelRegistration = (eventId: string) => {
@@ -244,7 +265,9 @@ export const EventsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       toggleBookmark,
       registerForEvent,
       cancelRegistration,
-      isLoading
+      isLoading,
+      selectedEventForRegistration,
+      setSelectedEventForRegistration
     }}>
       {children}
     </EventsContext.Provider>

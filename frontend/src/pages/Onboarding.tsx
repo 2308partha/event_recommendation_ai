@@ -117,7 +117,7 @@ export default function Onboarding() {
             </Card>
           </motion.div>
 
-          {/* VENUE PROVIDER PATH */}
+          {/* MARKETPLACE PROVIDER PATH */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -129,16 +129,16 @@ export default function Onboarding() {
                 <div className="mx-auto w-16 h-16 rounded-2xl bg-purple-500/20 flex items-center justify-center mb-4">
                   <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-500"><path d="M4 10V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V10"/><path d="M2 10L12 2L22 10"/><path d="M10 22V15C10 13.8954 10.8954 13 12 13C13.1046 13 14 13.8954 14 15V22"/></svg>
                 </div>
-                <CardTitle className="text-2xl">Venue Provider</CardTitle>
+                <CardTitle className="text-2xl">Marketplace Provider</CardTitle>
                 <CardDescription className="text-base mt-2">
-                  Offer your college venues to community organizers and manage bookings.
+                  Offer your venues, sponsorships, photography, or other services to organizers.
                 </CardDescription>
               </CardHeader>
               <div className="flex-grow" />
               <CardFooter className="pt-6">
                 {user?.publicMetadata?.role === "venue_provider" ? (
                   <Button onClick={() => navigate("/venue-provider/dashboard")} className="w-full h-12 text-lg rounded-xl bg-purple-600 hover:bg-purple-700 text-white">
-                    Go to Venue Dashboard
+                    Go to Provider Dashboard
                   </Button>
                 ) : (
                   <Button 

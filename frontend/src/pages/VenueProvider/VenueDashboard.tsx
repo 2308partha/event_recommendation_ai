@@ -3,7 +3,7 @@ import { useApi } from "@/hooks/useApi";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Users, Calendar, CheckCircle2, Loader2, Building2 } from "lucide-react";
+import { MapPin, Users, Calendar, CheckCircle2, Loader2, Store, Handshake } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
@@ -60,11 +60,11 @@ export default function VenueDashboard() {
       <div className="flex justify-between items-end mb-8">
         <div className="flex items-center gap-3">
           <div className="p-3 bg-purple-500/10 rounded-xl">
-            <Building2 className="w-6 h-6 text-purple-500" />
+            <Store className="w-6 h-6 text-purple-500" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Venue Provider Dashboard</h1>
-            <p className="text-muted-foreground mt-1">Review community event requests and offer your venue spaces.</p>
+            <h1 className="text-3xl font-bold tracking-tight">Marketplace Provider Dashboard</h1>
+            <p className="text-muted-foreground mt-1">Review community event requests and offer your services.</p>
           </div>
         </div>
       </div>
@@ -79,7 +79,7 @@ export default function VenueDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-purple-400">92/100</div>
-            <p className="text-xs text-muted-foreground mt-1">Verified by AI. Top 5% of venues in your area.</p>
+            <p className="text-xs text-muted-foreground mt-1">Verified by AI. Top 5% of providers in your area.</p>
           </CardContent>
         </Card>
 
@@ -91,7 +91,7 @@ export default function VenueDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">14</div>
-            <p className="text-xs text-muted-foreground mt-1">Upcoming events hosted at your venue.</p>
+            <p className="text-xs text-muted-foreground mt-1">Upcoming events utilizing your services.</p>
           </CardContent>
         </Card>
 
@@ -116,7 +116,7 @@ export default function VenueDashboard() {
         </div>
       ) : requests.length === 0 ? (
         <div className="text-center py-20 bg-muted/30 rounded-2xl border border-border/50">
-          <h3 className="text-xl font-medium">No venue requests right now.</h3>
+          <h3 className="text-xl font-medium">No community requests right now.</h3>
           <p className="text-muted-foreground mt-2">Community organizers haven't raised any new requirements.</p>
         </div>
       ) : (
@@ -175,9 +175,9 @@ export default function VenueDashboard() {
                     {acceptingId === req.id ? (
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     ) : (
-                      <MapPin className="w-4 h-4 mr-2" />
+                      <Handshake className="w-4 h-4 mr-2" />
                     )}
-                    Offer Your Venue
+                    Offer Your Services
                   </Button>
                 </CardFooter>
               </Card>

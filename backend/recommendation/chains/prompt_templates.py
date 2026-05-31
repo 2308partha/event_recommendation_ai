@@ -27,5 +27,6 @@ Output your analysis strictly as a JSON object with these exact keys:
 """
 
 recommendation_prompt = ChatPromptTemplate.from_messages([
-    ("system", RECOMMENDATION_SYSTEM_PROMPT)
+    ("system", RECOMMENDATION_SYSTEM_PROMPT),
+    ("human", "Evaluate this event for me based on the provided profile and context.")
 ])

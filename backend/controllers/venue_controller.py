@@ -65,6 +65,44 @@ async def verify_venue_provider_controller(request_data: VenueProviderRequestMod
 
     return {"approved": True, "reason": "AI successfully verified Institution ID.", "role": "venue_provider"}
 
+async def dev_bypass_provider_controller(clerk_user):
+    claims = clerk_user if isinstance(clerk_user, dict) else getattr(clerk_user, "claims", {})
+    clerk_user_id = claims.get("sub")
+    name = claims.get("name", "Test Provider")
+    email = claims.get("email", "")
+
+    provider_doc = {
+        "clerk_user_id": clerk_user_id,
+        "name": name,
+        "email": email,
+        "institution_name": "Seeded Test Provider",
+        "address": "Virtual HQ",
+        "contact_email": email,
+        "contact_phone": "0000000000",
+        "capacity": 500,
+        "verified": True,
+        "role": "venue_provider",
+        "created_at": str(datetime.datetime.utcnow())
+    }
+    
+    await venue_provider_collection.insert_one(provider_doc)
+    
+    # Also update user collection role
+    await user_collection.update_one(
+        {"clerk_user_id": clerk_user_id},
+        {"$set": {"role": "venue_provider"}}
+    )
+    
+    # Update clerk metadata
+    try:
+        await clerk_sdk.users.update_async(
+            user_id=clerk_user_id,
+            public_metadata={"role": "venue_provider"}
+        )
+    except Exception as e:
+        print(f"Failed to update Clerk metadata: {e}")
+
+    return {"approved": True, "reason": "Dev bypass applied.", "role": "venue_provider"}
 
 # ================================
 # MARKETPLACE LOGIC (Venue Requests)

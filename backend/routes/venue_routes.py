@@ -41,6 +41,19 @@ async def verify_venue_provider(
 
 
 # ----------------------------
+# DEV BYPASS (Quick login for user)
+# ----------------------------
+
+@router.post("/dev-bypass")
+async def dev_bypass_provider(current_user=Depends(verify_clerk_token)):
+    from controllers.venue_controller import dev_bypass_provider_controller
+    try:
+        return await dev_bypass_provider_controller(current_user)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ----------------------------
 # VENUE MARKETPLACE REQUESTS
 # ----------------------------
 

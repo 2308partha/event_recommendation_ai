@@ -64,7 +64,7 @@ export const ChatbotDrawer: React.FC = () => {
         message: textToSend
       });
       
-      const replyText = res.data?.response || res.data?.message || "Sorry, I couldn't process that.";
+      const replyText = res.data?.reply || res.data?.response || res.data?.message || "Sorry, I couldn't process that.";
       
       setMessages(prev => [...prev, {
         id: `reply_${Date.now()}`,

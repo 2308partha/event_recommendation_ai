@@ -9,7 +9,7 @@ interface EventCardProps {
 }
 
 export const EventCard: React.FC<EventCardProps> = ({ event }) => {
-  const { user, toggleBookmark, registerForEvent, cancelRegistration } = useEvents();
+  const { user, toggleBookmark, cancelRegistration, setSelectedEventForRegistration } = useEvents();
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const [showShareTooltip, setShowShareTooltip] = useState(false);
@@ -70,12 +70,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
         cancelRegistration(event._id);
       }
     } else {
-      const success = registerForEvent(event._id);
-      if (success) {
-        alert(`Congratulations! You registered for ${event.title}. +50 Coins added to your wallet!`);
-      } else {
-        alert("Registration failed. No seats available or registration is closed.");
-      }
+      setSelectedEventForRegistration(event);
     }
   };
 

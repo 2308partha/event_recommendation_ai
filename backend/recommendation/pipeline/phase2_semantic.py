@@ -7,19 +7,23 @@ from langchain_core.output_parsers import JsonOutputParser
 from recommendation.chains.prompt_templates import recommendation_prompt
 from datetime import timezone
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from dotenv import load_dotenv
 
-# 1. Initialize our sharing embedding model to map vectors cleanly
-embeddings = GoogleGenerativeAIEmbeddings(model="gemini-embedding-2-preview")
+load_dotenv()
 
-# 2. Bind to your persistent, local vector database store
-vectorstore = Chroma(
-    collection_name="campus_events",
-    embedding_function=embeddings,
-    persist_directory="./chroma_db"
-)
+from services.embedding_service import EmbeddingService
 
-def calculate_fomo_score(deadline: datetime) -> float:
+def calculate_fomo_score(deadline) -> float:
     """Computes an exponential decay curve for impending deadlines (FOMO)."""
+    if isinstance(deadline, str):
+        # Handle formats like '2026-06-10T23:59:59Z' or '2026-06-10T23:59:59.000Z'
+        deadline_str = deadline.replace('Z', '+00:00')
+        try:
+            deadline = datetime.fromisoformat(deadline_str)
+        except ValueError:
+            # Fallback if parsing fails
+            return 0.0
+            
     naive_deadline = deadline.replace(tzinfo=None)
     hours_left = (naive_deadline - datetime.now(timezone.utc).replace(tzinfo=None)).total_seconds() / 3600.0
     if hours_left <= 0: return 0.0
@@ -41,26 +45,34 @@ async def evaluate_candidates_with_ai(db: AsyncIOMotorDatabase, user_profile: di
     llm = ChatGoogleGenerativeAI(
         model="gemini-2.5-flash",
         temperature=0.2,
-        response_schema={"type": "json_object"}
+        max_retries=0,
+        google_api_key=os.getenv("GEMINI_API_KEY")
     )
     chain = recommendation_prompt | llm | JsonOutputParser()
     
     # Construct a string representation of the student profile for vector matching
-    student_profile_str = f"Branch: {user_profile.get('branch', '')}. Skills: {', '.join(user_profile.get('skills', []))}. Interests: {', '.join(user_profile.get('interests', []))}"
+    student_profile_str = f"Branch: {user_profile.get('branch', '')}. Skills: {', '.join(user_profile.get('skills') or [])}. Interests: {', '.join(user_profile.get('interests') or [])}"
     
     # Fetch semantic similarity metrics from your local ChromaDB
-    matched_docs = vectorstore.similarity_search_with_relevance_scores(student_profile_str, k=10)
+    try:
+        matched_docs = EmbeddingService.search_similar_events(student_profile_str, n_results=10)
+    except Exception as e:
+        print(f"Warning: Local ChromaDB similarity search failed: {e}")
+        matched_docs = []
     
     vector_score_map = {}
-    for doc, score in matched_docs:
-        ev_id = doc.metadata.get("event_id")
+    for doc in matched_docs:
+        ev_id = doc.get("event_id")
+        score = doc.get("distance", 1.0)
+        # Convert distance to similarity score (0 to 1). Lower distance = higher similarity.
+        sim_score = max(0.0, 1.0 - score)
         if ev_id:
-            vector_score_map[str(ev_id)] = max(0.0, min(1.0, score))
+            vector_score_map[str(ev_id)] = sim_score
             
     # --- Past Registrations & Teammate Extraction ---
-    registered_event_ids = user_profile.get("registered_events", [])
+    registered_event_ids = user_profile.get("registered_events") or []
     past_tags = set()
-    past_teammates = set(user_profile.get("friends_ids", [])) # Start with friends
+    past_teammates = set(user_profile.get("friends_ids") or []) # Start with friends
     
     if registered_event_ids:
         # Fetch details of past registered events
@@ -114,23 +126,9 @@ async def evaluate_candidates_with_ai(db: AsyncIOMotorDatabase, user_profile: di
         if user_profile.get("branch") and any(user_profile.get("branch").lower() in tag.lower() for tag in event_tags):
             history_score = min(history_score + 0.3, 1.0)
         
-        try:
-            ai_payload = await chain.ainvoke({
-                "branch": user_profile.get("branch", "General"),
-                "skills": ", ".join(user_profile.get("skills", [])),
-                "interests": ", ".join(user_profile.get("interests", [])),
-                "event_title": event["title"],
-                "event_description": event["description"],
-                "event_tags": ", ".join(event_tags),
-                "host_college": host_college,
-                "friends_attending_count": len(teammates_attending)
-            })
-            final_semantic_metric = (chroma_semantic_score * 0.4) + (ai_payload.get("semantic_score", 0.5) * 0.6)
-            reason_text = ai_payload.get("reason", "Highly trending inside your branch.")
-            
-        except Exception:
-            final_semantic_metric = chroma_semantic_score
-            reason_text = "Matches your technical development roadmap based on historical data."
+        # Bypass Gemini AI completely to avoid 429 Rate Limits on Free Tier
+        final_semantic_metric = chroma_semantic_score
+        reason_text = "Matches your technical development roadmap based on historical data."
             
         scored_packages.append({
             "event_data": event,

@@ -25,6 +25,11 @@ class EventCreateModel(BaseModel):
     intercollege: bool = True
     banner_url: Optional[HttpUrl] = None
 
+    # Marketplace Requirements
+    budget: Optional[float] = 0.0
+    expected_attendees: Optional[int] = 0
+    required_resources: List[str] = [] # e.g., ["Venue", "Sponsor", "Speaker", "Catering"]
+
 class EventModel(EventCreateModel):
     """What is actually saved in MongoDB"""
     # 🔒 Tracking Additions
