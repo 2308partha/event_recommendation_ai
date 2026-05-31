@@ -1,7 +1,8 @@
 from datetime import datetime, timezone
 from fastapi import HTTPException
 
-from database.db import user_collection 
+from database.db import user_collection, registration_collection, event_collection
+from bson import ObjectId
 from models.user_model import UserCreateModel, UserUpdateModel
 from middleware.auth_middleware import clerk_sdk
 from services.geolocation_service import GeolocationService
@@ -132,3 +133,119 @@ async def update_user_controller(clerk_user, update_data: UserUpdateModel):
         "message": "User updated",
         "is_profile_completed": is_completed
     }
+
+# =========================
+# GET USER ANALYTICS
+# =========================
+
+async def get_user_analytics_controller(clerk_user):
+    try:
+        claims = clerk_user if isinstance(clerk_user, dict) else getattr(clerk_user, "claims", {})
+        user_id = claims.get("sub")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Unauthorized: No user ID found in token")
+        
+        # 1. Fetch User Details
+        user_doc = await user_collection.find_one({"clerk_user_id": user_id}) or {}
+        
+        # 2. Get all registrations for this user
+        cursor = registration_collection.find({"user_id": user_id})
+        registrations = await cursor.to_list(length=100)
+        
+        # 3. Build event_id list and lookup event details
+        event_ids = []
+        for r in registrations:
+            eid = r.get("event_id")
+            if isinstance(eid, str) and ObjectId.is_valid(eid):
+                event_ids.append(ObjectId(eid))
+            elif isinstance(eid, ObjectId):
+                event_ids.append(eid)
+
+        events_map = {}
+        if event_ids:
+            events_cursor = event_collection.find({"_id": {"$in": event_ids}})
+            events_list = await events_cursor.to_list(length=100)
+            events_map = {str(e["_id"]): e for e in events_list}
+            
+        attended_events = []
+        performance_history = []
+        total_score = 0.0
+        scored_count = 0
+        
+        for reg in registrations:
+            eid = str(reg.get("event_id", ""))
+            event = events_map.get(eid, {})
+            score = reg.get("performance_score")
+            date_val = reg.get("registered_at", "")
+            date_str = str(date_val)[:10] if date_val else "N/A"
+
+            attended_events.append({
+                "title": event.get("title", "Unknown Event"),
+                "category": event.get("category", "General"),
+                "score": score,
+                "date": date_str,
+                "status": reg.get("status", "registered"),
+                "attended": reg.get("attended", False),
+            })
+
+            if score is not None:
+                performance_history.append({
+                    "name": event.get("title", "Event"),
+                    "score": float(score),
+                    "date": date_str
+                })
+                total_score += float(score)
+                scored_count += 1
+
+        avg_score = round(total_score / scored_count, 1) if scored_count > 0 else 0.0
+
+        # 4. Fetch Bounties earned by this user
+        from database.db import bounty_collection
+        bounty_cursor = bounty_collection.find({"assigned_to": user_id, "status": "completed"})
+        bounties_raw = await bounty_cursor.to_list(length=100)
+        
+        bounties_earned = []
+        total_bounty_tokens = 0
+        for b in bounties_raw:
+            reward_str = str(b.get("reward", "0"))
+            try:
+                digits = ''.join(filter(str.isdigit, reward_str))
+                tokens = int(digits) if digits else 0
+            except Exception:
+                tokens = 0
+            total_bounty_tokens += tokens
+            bounties_earned.append({
+                "title": b.get("title", "Bounty Task"),
+                "reward": reward_str,
+                "tokens": tokens,
+                "category": b.get("category", "General"),
+                "completed_at": str(b.get("created_at", ""))[:10]
+            })
+
+        return {
+            "user_details": {
+                "name": user_doc.get("name", claims.get("name", "Student")),
+                "email": user_doc.get("email", claims.get("email", "")),
+                "department": user_doc.get("department", "Not Specified"),
+                "roll_no": user_doc.get("roll_no", "Not Specified"),
+                "skills": user_doc.get("skills", []) or [],
+                "image_url": user_doc.get("image_url", ""),
+                "college_name": user_doc.get("college_name", "Not Specified"),
+                "phone_number": user_doc.get("phone_number", ""),
+                "blood_group": user_doc.get("blood_group", ""),
+                "pass_out_year": str(user_doc.get("pass_out_year", "")),
+                "interests": user_doc.get("interests", []) or [],
+                "hobbies": user_doc.get("hobbies", []) or [],
+            },
+            "analytics": {
+                "total_events": len(registrations),
+                "average_score": avg_score,
+                "performance_history": performance_history,
+                "attended_events": attended_events,
+                "total_bounty_tokens": total_bounty_tokens,
+                "bounties_earned": bounties_earned
+            }
+        }
+    except Exception as e:
+        print(f"Analytics error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

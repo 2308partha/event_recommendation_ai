@@ -63,6 +63,7 @@ async def run_standalone_seeder():
         # 5. Build and insert your active Student Profile
         mock_user = {
             "_id": "mock_user_12345",
+            "clerk_user_id": "mock_user_12345",
             "name": "Sourav Sen",
             "email": "souravsen6378@gmail.com",
             "branch": "Mathematics and Computing",
@@ -74,10 +75,34 @@ async def run_standalone_seeder():
             "coordinates": [87.2913, 23.5477],  # Base geo anchoring (NIT Durgapur)
             "coins": 120,
             "badges": ["Beta Explorer"],
+            "created_at": datetime.utcnow(),
+            "image_url": "https://api.dicebear.com/7.x/avataaars/svg?seed=Sourav"
+        }
+        
+        peer_99 = {
+            "_id": "peer_user_99",
+            "clerk_user_id": "peer_user_99",
+            "name": "Aisha Sharma",
+            "email": "aisha@example.com",
+            "branch": "Computer Science",
+            "skills": ["Python", "Machine Learning", "System Design"],
+            "image_url": "https://api.dicebear.com/7.x/avataaars/svg?seed=Aisha",
             "created_at": datetime.utcnow()
         }
-        await db["users"].insert_one(mock_user)
-        print("👤 MongoDB Atlas: Successfully injected Student Profile.")
+        
+        peer_88 = {
+            "_id": "peer_user_88",
+            "clerk_user_id": "peer_user_88",
+            "name": "Rohan Gupta",
+            "email": "rohan@example.com",
+            "branch": "Electronics",
+            "skills": ["Embedded C", "IoT", "Robotics"],
+            "image_url": "https://api.dicebear.com/7.x/avataaars/svg?seed=Rohan",
+            "created_at": datetime.utcnow()
+        }
+
+        await db["users"].insert_many([mock_user, peer_99, peer_88])
+        print("👤 MongoDB Atlas: Successfully injected Student Profiles.")
 
         # 6. Build and insert core test events
         mock_events = [
@@ -118,6 +143,58 @@ async def run_standalone_seeder():
         ]
         await db["events"].insert_many(mock_events)
         print("📅 MongoDB Atlas: Successfully injected structural Event records with 2dsphere indexing.")
+
+        # 6.5. Build and insert mock registrations with performance scores for networking
+        mock_registrations = [
+            {
+                "event_id": str(event_one_id),
+                "user_id": "mock_user_12345",
+                "team_name": None,
+                "members": [{"name": "Sourav Sen", "email": "souravsen6378@gmail.com"}],
+                "linked_user_ids": [],
+                "registered_at": datetime.utcnow(),
+                "status": "approved",
+                "attended": True,
+                "performance_score": 75.5
+            },
+            {
+                "event_id": str(event_one_id),
+                "user_id": "peer_user_99",
+                "team_name": None,
+                "members": [{"name": "Aisha Sharma", "email": "aisha@example.com"}],
+                "linked_user_ids": [],
+                "registered_at": datetime.utcnow(),
+                "status": "approved",
+                "attended": True,
+                "performance_score": 92.0 # Outperformed Sourav!
+            },
+            {
+                "event_id": str(event_one_id),
+                "user_id": "peer_user_88",
+                "team_name": None,
+                "members": [{"name": "Rohan Gupta", "email": "rohan@example.com"}],
+                "linked_user_ids": [],
+                "registered_at": datetime.utcnow(),
+                "status": "approved",
+                "attended": True,
+                "performance_score": 60.0 # Did not outperform Sourav
+            },
+            {
+                "event_id": str(event_two_id),
+                "user_id": "peer_user_88",
+                "team_name": None,
+                "members": [{"name": "Rohan Gupta", "email": "rohan@example.com"}],
+                "linked_user_ids": [],
+                "registered_at": datetime.utcnow(),
+                "status": "approved",
+                "attended": True,
+                "performance_score": 85.0 
+            }
+        ]
+        
+        await db["registrations"].delete_many({})
+        await db["registrations"].insert_many(mock_registrations)
+        print("✅ MongoDB Atlas: Successfully injected Registration records with Performance Scores.")
 
         # 7. Generate Embeddings and Seed ChromaDB via import tracking
         print("🧠 Invoking Gemini Embeddings engine to tokenize contextual targets...")

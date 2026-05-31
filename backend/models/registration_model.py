@@ -35,8 +35,12 @@ class RegistrationModel(RegistrationCreateModel):
     # Status tracking for the Admin & User Dashboards
     status: str = "registered" # can be: registered, waitlisted, rejected, approved
     attended: bool = False # Admin flips this on the day of the event
+    
+    # Performance tracking for Peer Mentorship Networking
+    performance_score: Optional[float] = None
 
 class RegistrationUpdateModel(BaseModel):
     """Payload for Admins to update a student's status or attendance via PATCH"""
     status: Optional[str] = None
     attended: Optional[bool] = None
+    performance_score: Optional[float] = None
