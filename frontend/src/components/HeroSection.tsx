@@ -138,7 +138,7 @@ export const HeroSection: React.FC = () => {
                   </div>
 
                   <a
-                    href={`/events/${featuredEvents[currentSlide]._id}`}
+                    href={`/student/events/${featuredEvents[currentSlide]._id}`}
                     className="flex items-center gap-1.5 text-xs text-white hover:text-violet-400 font-extrabold bg-violet-600/90 dark:bg-violet-600 hover:bg-violet-700 px-3.5 py-2 rounded-xl transition-all glow-primary hover:-translate-y-0.5"
                   >
                     View Details

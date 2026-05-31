@@ -51,7 +51,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
   const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    const url = `${window.location.origin}/events/${event._id}`;
+    const url = `${window.location.origin}/student/events/${event._id}`;
     navigator.clipboard.writeText(url);
     setShowShareTooltip(true);
     setTimeout(() => setShowShareTooltip(false), 2000);
@@ -226,7 +226,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
           
           {/* Details trigger */}
           <a
-            href={`/events/${event._id}`}
+            href={`/student/events/${event._id}`}
             className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl text-xs font-extrabold border border-slate-200 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900 transition-all active:scale-95 text-slate-700 dark:text-slate-300"
           >
             View Details

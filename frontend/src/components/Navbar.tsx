@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useEvents } from '../hooks/useEvents';
 import { Search, Bell, Moon, Sun, Award, Coins, ChevronDown, LogOut, User as UserIcon, Calendar, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const Navbar: React.FC = () => {
+  const navigate = useNavigate();
   const { user, filters, setFilters } = useEvents();
   const [dark, setDark] = useState(() => localStorage.getItem('theme') === 'dark');
   const [profileOpen, setProfileOpen] = useState(false);
@@ -44,7 +46,7 @@ export const Navbar: React.FC = () => {
         <div className="flex items-center justify-between gap-4">
           
           {/* Platform Logo */}
-          <div className="flex items-center gap-2 flex-shrink-0 cursor-pointer" onClick={() => window.location.href = '/'}>
+          <div className="flex items-center gap-2 flex-shrink-0 cursor-pointer" onClick={() => navigate('/student/dashboard')}>
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 to-fuchsia-500 flex items-center justify-center glow-primary">
               <Calendar className="w-5 h-5 text-white" />
             </div>

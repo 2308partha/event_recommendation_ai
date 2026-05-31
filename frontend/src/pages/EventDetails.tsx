@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEvents } from '../hooks/useEvents';
+import { Navbar } from '../components/Navbar';
 import { Calendar, MapPin, ArrowLeft, Users, Trophy, DollarSign, Globe, Sparkles, CheckCircle2, ChevronDown, Phone, Mail } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -28,7 +29,7 @@ export const EventDetails: React.FC = () => {
         <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100">Event Not Found</h2>
         <p className="text-sm text-muted-foreground">The event you are looking for might have been deleted or expired.</p>
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/student/dashboard')}
           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-violet-600 text-white font-extrabold text-xs shadow-md glow-primary"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -81,21 +82,23 @@ export const EventDetails: React.FC = () => {
   const seatsPercentage = Math.min(100, (event.registration_count / event.max_seats) * 100);
 
   return (
-    <div className="pb-20 relative">
-      
-      {/* Back Button Trigger */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 relative z-10">
-        <button
-          onClick={() => navigate('/')}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/70 dark:bg-slate-900/60 backdrop-blur-sm border border-slate-200/50 dark:border-slate-800/40 text-xs font-extrabold hover:bg-slate-100 transition-colors shadow-sm text-slate-700 dark:text-slate-300"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Dashboard
-        </button>
-      </div>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+      <Navbar />
+      <div className="pb-20 relative">
+        
+        {/* Back Button Trigger */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 relative z-10">
+          <button
+            onClick={() => navigate('/student/dashboard')}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/70 dark:bg-slate-900/60 backdrop-blur-sm border border-slate-200/50 dark:border-slate-800/40 text-xs font-extrabold hover:bg-slate-100 transition-colors shadow-sm text-slate-700 dark:text-slate-300"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Dashboard
+          </button>
+        </div>
 
-      {/* Hero Banner Banner Header */}
-      <div className="w-full h-[320px] sm:h-[450px] relative -mt-16 overflow-hidden">
+        {/* Hero Banner Banner Header */}
+        <div className="w-full h-[320px] sm:h-[450px] relative overflow-hidden">
         <img src={event.banner_image} alt={event.title} className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-slate-950/20" />
         
@@ -342,5 +345,6 @@ export const EventDetails: React.FC = () => {
 
       </div>
     </div>
-  );
+  </div>
+);
 };

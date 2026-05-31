@@ -12,9 +12,12 @@ load_dotenv()
 # Import your database core injection provider directly from your root file
 from database import get_db
 
-# Import the decoupled routers from your routes directory
+# Import all routers from partha and coder branches
+from routes.user_routes import router as user_router
+from routes.admin_routes import router as admin_router
+from routes.event_routes import router as event_router
+from routes.registration_routes import router as registration_router
 from routes.recommendation_router import router as recommendation_router
-# ─── ADDED CHAT ROUTER IMPORT ────────────────────────────────────────
 from routes.chat_router import router as chat_router
 
 app = FastAPI(
@@ -32,9 +35,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Register your modular external AI API route engines
+# Register all routes from both branches
+app.include_router(user_router, prefix="/api", tags=["Users"])
+app.include_router(admin_router, prefix="/api", tags=["Admin"])
+app.include_router(event_router, prefix="/api", tags=["Events"])
+app.include_router(registration_router, prefix="/api", tags=["Registrations"])
 app.include_router(recommendation_router)
-# ─── REGISTERED CHAT ROUTER HERE ─────────────────────────────────────
 app.include_router(chat_router)
 
 

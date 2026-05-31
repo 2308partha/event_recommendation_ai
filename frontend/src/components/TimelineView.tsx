@@ -70,7 +70,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ events }) => {
 
                 {/* View Details CTA */}
                 <a
-                  href={`/events/${event._id}`}
+                  href={`/student/events/${event._id}`}
                   className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 text-center transition-colors flex-shrink-0"
                 >
                   View Details

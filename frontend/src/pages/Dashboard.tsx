@@ -117,7 +117,7 @@ export const Dashboard: React.FC = () => {
                 <div className="space-y-4">
                   {recentlyAdded.map(event => (
                     <a
-                      href={`/events/${event._id}`}
+                      href={`/student/events/${event._id}`}
                       key={event._id}
                       className="flex items-center gap-4 p-3 rounded-2xl bg-white dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/50 hover:border-violet-500/30 transition-all group"
                     >
