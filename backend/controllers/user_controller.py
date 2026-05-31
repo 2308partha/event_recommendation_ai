@@ -18,15 +18,23 @@ async def create_user_controller(clerk_user):
     email = claims.get("email")
     image_url = claims.get("image_url")
 
+    # 🌟 ADD THIS LINE: Force email to lowercase if it exists
+    if email:
+        email = email.lower()
+
     if not (name and email and image_url):
         try:
             full_user = await clerk_sdk.users.get_async(user_id=clerk_user_id)
             name = name or f"{full_user.first_name or ''} {full_user.last_name or ''}".strip() or "Unknown"
-            email = email or (full_user.email_addresses[0].email_address if full_user.email_addresses else "unknown@example.com")
+            
+            # 🌟 UPDATE THIS LINE: Add .lower() to the fallback as well
+            raw_email = email or (full_user.email_addresses[0].email_address if full_user.email_addresses else "unknown@example.com")
+            email = raw_email.lower()
+            
             image_url = image_url or full_user.image_url or "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Cannot fetch user details from Clerk API: {str(e)}")
-
+        
     user_data = UserCreateModel(
         clerk_user_id=clerk_user_id,
         name=name,

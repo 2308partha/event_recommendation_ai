@@ -1,17 +1,32 @@
 import { ClerkProvider } from "@clerk/clerk-react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { EventsProvider } from "./hooks/useEvents";
-import { ChatbotDrawer } from "./components/ChatbotDrawer";
 
-// Guard & Pages
+// Guard & Layout
 import RouteGuard from "./components/RouteGuard";
+import { Toaster } from "@/components/ui/sonner";
+import { SharedLayout } from "./components/layout/SharedLayout";
+
+// Pages
 import Home from "./pages/Home";
 import Onboarding from "./pages/Onboarding";
-import StudentDashboard from "./pages/student/StudentDashboard";
 import AdminVerify from "./pages/Admin/AdminVerify";
 import AdminDashboard from "./pages/Admin/AdminDashboard";
+import StudentDashboard from "./pages/student/StudentDashboard";
 import { EventDetails } from "./pages/EventDetails";
+
+// Partha Microservice Pages
+import CreateEvent from "./pages/Admin/CreateEvent";
+import ManageEvent from "./pages/Admin/ManageEvent";
+import ManageBounties from "./pages/Admin/ManageBounties";
+import RequestVenue from "./pages/Admin/RequestVenue";
+import SkillSandbox from "./pages/student/SkillSandbox";
+import IncubationDashboard from "./pages/student/IncubationDashboard";
+import BountyBoard from "./pages/student/BountyBoard";
+import Mentorship from "./pages/student/Mentorship";
+import HackerRoom from "./pages/student/HackerRoom";
+import VenueProviderVerify from "./pages/VenueProvider/VenueProviderVerify";
+import VenueDashboard from "./pages/VenueProvider/VenueDashboard";
 
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -32,53 +47,51 @@ export default function App() {
   return (
     <ClerkProvider publishableKey={clerkPubKey}>
       <QueryClientProvider client={queryClient}>
-        <EventsProvider>
-          <BrowserRouter>
-            <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-between transition-colors duration-300">
-              <div className="flex-grow">
-                <Routes>
-                  {/* Public Route */}
-                  <Route path="/" element={<Home />} />
+        <BrowserRouter>
+          <Routes>
+            {/* Public Route */}
+            <Route path="/" element={<Home />} />
 
-                  {/* Authenticated routes, but no specific role required yet */}
-                  <Route element={<RouteGuard requireAuth={true} />}>
-                    <Route path="/onboarding" element={<Onboarding />} />
-                    <Route path="/admin/verify" element={<AdminVerify />} />
-                  </Route>
+            {/* Authenticated routes, but no specific role required yet */}
+            <Route element={<RouteGuard requireAuth={true} />}>
+              <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/admin/verify" element={<AdminVerify />} />
+              <Route path="/venue-provider/verify" element={<VenueProviderVerify />} />
+            </Route>
 
-                  {/* Student Protected Routes */}
-                  <Route element={<RouteGuard requireAuth={true} allowedRole="student" />}>
-                    <Route path="/student/dashboard" element={<StudentDashboard />} />
-                    <Route path="/student/events/:eventId" element={<EventDetails />} />
-                  </Route>
+            {/* Student Protected Routes */}
+            <Route element={<RouteGuard requireAuth={true} allowedRole="student" />}>
+              <Route element={<SharedLayout />}>
+                <Route path="/student/dashboard" element={<StudentDashboard />} />
+                <Route path="/student/events/:eventId" element={<EventDetails />} />
+                <Route path="/student/skills" element={<SkillSandbox />} />
+                <Route path="/student/incubator" element={<IncubationDashboard />} />
+                <Route path="/student/bounties" element={<BountyBoard />} />
+                <Route path="/student/mentorship" element={<Mentorship />} />
+                <Route path="/student/hacker-room/:roomId" element={<HackerRoom />} />
+              </Route>
+            </Route>
 
-                  {/* Admin Protected Routes */}
-                  <Route element={<RouteGuard requireAuth={true} allowedRole="admin" />}>
-                    <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                  </Route>
-                </Routes>
-              </div>
+            {/* Admin Protected Routes */}
+            <Route element={<RouteGuard requireAuth={true} allowedRole="admin" />}>
+              <Route element={<SharedLayout />}>
+                <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                <Route path="/admin/events/create" element={<CreateEvent />} />
+                <Route path="/admin/events/:id" element={<ManageEvent />} />
+                <Route path="/admin/bounties" element={<ManageBounties />} />
+                <Route path="/admin/venues/request" element={<RequestVenue />} />
+              </Route>
+            </Route>
 
-              {/* Platform Footer */}
-              <footer className="w-full py-8 border-t border-slate-200/50 dark:border-slate-900/60 bg-white/40 dark:bg-slate-950/20 backdrop-blur-sm text-center">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-xs text-muted-foreground flex flex-col sm:flex-row justify-between items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <span className="font-extrabold text-sm tracking-wider bg-gradient-to-r from-violet-600 to-fuchsia-500 bg-clip-text text-transparent dark:from-violet-400 dark:to-fuchsia-400">
-                      NEXUS AI
-                    </span>
-                    <span>• Centralized Campus Event Manager Discovery Platform</span>
-                  </div>
-                  <div>
-                    <p>© 2026 Nexus AI Inc. Built for College Hackathons & Campus Life.</p>
-                  </div>
-                </div>
-              </footer>
-
-              {/* RAG Chatbot Assistant */}
-              <ChatbotDrawer />
-            </div>
-          </BrowserRouter>
-        </EventsProvider>
+            {/* Venue Provider Routes */}
+            <Route element={<RouteGuard requireAuth={true} allowedRole="venue_provider" />}>
+              <Route element={<SharedLayout />}>
+                <Route path="/venue-provider/dashboard" element={<VenueDashboard />} />
+              </Route>
+            </Route>
+          </Routes>
+        </BrowserRouter>
+        <Toaster richColors position="top-right" />
       </QueryClientProvider>
     </ClerkProvider>
   );

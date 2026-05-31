@@ -9,16 +9,22 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 # Ensure local environment variables and credentials (GEMINI_API_KEY) are loaded right at bootup
 load_dotenv()
 
-# Import your database core injection provider directly from your root file
-from database import get_db
+# Import database core injection provider directly from your root file
+from database.db import db
 
 # Import all routers from partha and coder branches
 from routes.user_routes import router as user_router
 from routes.admin_routes import router as admin_router
 from routes.event_routes import router as event_router
+from routes.incubation_routes import router as incubation_router
+from routes.bounty_routes import router as bounty_router
+from routes.mentorship_routes import router as mentorship_router
+from routes.hacker_room_routes import router as hacker_room_router
 from routes.registration_routes import router as registration_router
-from routes.recommendation_router import router as recommendation_router
-from routes.chat_router import router as chat_router
+from routes.skill_routes import router as skill_router
+from routes.venue_routes import router as venue_router
+from routes.recommendation_router import router as github_rec_router
+from routes.chat_router import router as github_chat_router
 
 app = FastAPI(
     title="College Event Manager AI Backend",
@@ -35,13 +41,33 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Register all routes from both branches
+# Yield DB dependency
+async def get_db():
+    yield db
+
+@app.get("/")
+async def home():
+    return {
+        "status": "online",
+        "message": "Backend Running",
+        "engine": "Nexus AI Core Recommendation System Running"
+    }
+
+# ── Register all routes from both branches ──────────────────────────────────────────
 app.include_router(user_router, prefix="/api", tags=["Users"])
 app.include_router(admin_router, prefix="/api", tags=["Admin"])
 app.include_router(event_router, prefix="/api", tags=["Events"])
+app.include_router(incubation_router, prefix="/api/incubator", tags=["Incubator"])
+app.include_router(bounty_router, prefix="/api/bounties", tags=["Bounties"])
+app.include_router(mentorship_router, prefix="/api/mentorship", tags=["Mentorship"])
+app.include_router(hacker_room_router, prefix="/api/hacker-rooms", tags=["Hacker Rooms"])
 app.include_router(registration_router, prefix="/api", tags=["Registrations"])
-app.include_router(recommendation_router)
-app.include_router(chat_router)
+app.include_router(skill_router, prefix="/api/skills", tags=["Skills"])
+app.include_router(venue_router, prefix="/api/venues", tags=["Venues"])
+
+# Coder Branch Discovery and Chatbot Routers (prefixed under github-feed per partha branch layout)
+app.include_router(github_rec_router, prefix="/api/v1/github-feed", tags=["Github Feed"])
+app.include_router(github_chat_router, prefix="/api/v1/github-feed", tags=["Github Chatbot"])
 
 
 # ─── DEVELOPMENT UTILITY ROUTES ───────────────────────────────────
@@ -132,21 +158,8 @@ async def seed_mock_data(db: AsyncIOMotorDatabase = Depends(get_db)):
         )
 
 
-# ─── CORE LIFECYCLE PING ──────────────────────────────────────────
-
-@app.get("/", tags=["System Lifecycle"])
-async def root_ping():
-    """
-    Simple status verification endpoint.
-    """
-    return {
-        "status": "online", 
-        "engine": "Nexus AI Core Recommendation System Running"
-    }
-
 if __name__ == "__main__":
     import uvicorn
-    import os
     
     # Calculate the exact directory path where your server code lives
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -157,7 +170,6 @@ if __name__ == "__main__":
         port=8000, 
         reload=True,
         # ─── EXTRA CAREFUL PATH EXCLUSIONS ──────────────────────────────────
-        # Instead of generic wildcards, we explicitly name the directory trees
         reload_excludes=[
             "*.pyc", 
             "*_db", 
@@ -166,7 +178,6 @@ if __name__ == "__main__":
             ".venv/*", 
             "__pycache__/*"
         ],
-        # Tell Uvicorn explicitly to focus its watch eyes only on your code subfolders
         reload_dirs=[
             os.path.join(base_dir, "routes"),
             os.path.join(base_dir, "chatbot"),

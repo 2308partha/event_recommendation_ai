@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from bson import ObjectId
 from fastapi import HTTPException
 from database.db import event_collection, registration_collection, user_collection 
@@ -26,7 +26,8 @@ async def create_registration_controller(
     try:
         deadline_str = event.get("registration_deadline", "").replace("Z", "")
         deadline = datetime.fromisoformat(deadline_str)
-        if datetime.utcnow() > deadline:
+        # 🌟 FIX: Updated deprecated datetime.utcnow() to timezone.utc
+        if datetime.now(timezone.utc).replace(tzinfo=None) > deadline:
             raise HTTPException(status_code=400, detail="Registration for this event has closed.")
     except ValueError:
         pass # Fallback if date is missing or malformed
@@ -63,7 +64,8 @@ async def create_registration_controller(
     # Instantly link teammates who ALREADY have an account
     cursor = user_collection.find({"email": {"$in": member_emails}})
     async for db_user in cursor:
-        found_clerk_id = db_user.get("clerk_id") or str(db_user.get("_id"))
+        # 🌟 FIX: Corrected key name to clerk_user_id and removed the raw _id fallback!
+        found_clerk_id = db_user.get("clerk_user_id") 
         if found_clerk_id and found_clerk_id not in linked_ids:
             linked_ids.append(found_clerk_id)
 
@@ -71,7 +73,8 @@ async def create_registration_controller(
     reg_dict = registration_data.model_dump(mode="json")
     reg_dict["user_id"] = user_id
     reg_dict["linked_user_ids"] = linked_ids # Contains creator + any existing friends
-    reg_dict["registered_at"] = datetime.utcnow().isoformat()
+    # 🌟 FIX: Updated deprecated datetime.utcnow()
+    reg_dict["registered_at"] = datetime.now(timezone.utc).isoformat()
     reg_dict["status"] = "registered"
     reg_dict["attended"] = False
 
@@ -94,7 +97,8 @@ async def get_my_registrations_controller(clerk_user):
     user_id = claims.get("sub")
     
     # 1. Fetch the user's email to catch registrations where they weren't linked by ID yet
-    current_user = await user_collection.find_one({"clerk_id": user_id})
+    # 🌟 FIX: Corrected query key to clerk_user_id
+    current_user = await user_collection.find_one({"clerk_user_id": user_id})
     
     # 2. The Fail-Safe Query
     if current_user and current_user.get("email"):

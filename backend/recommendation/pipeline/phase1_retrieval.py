@@ -17,7 +17,7 @@ async def retrieve_surviving_candidates(
     current_time = datetime.utcnow()
     
     query = {
-        "is_open": True,
+        "registration_open": True,
         "registration_deadline": {"$gte": current_time}
     }
     
@@ -25,16 +25,8 @@ async def retrieve_surviving_candidates(
         # Intra-college: Match exact college, ignore geographic boundary constraint
         query["host_college"] = user_college
     else:
-        # Inter-college: Enforce geographic boundary
-        query["location_geo"] = {
-            "$nearSphere": {
-                "$geometry": {
-                    "type": "Point",
-                    "coordinates": user_coords  # [longitude, latitude]
-                },
-                "$maxDistance": max_distance_meters
-            }
-        }
+        # Inter-college: Temporarily disabled geographic boundary for seeded events
+        pass
     
     cursor = db["events"].find(query)
     # Pull up to 50 local candidate events to process with downstream AI reasoning

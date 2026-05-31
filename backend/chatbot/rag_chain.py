@@ -82,12 +82,7 @@ async def get_chatbot_response(session_id: str, user_message: str) -> str:
     # 2. Dynamic Database State Fetching: Pull all live MongoDB event records
     mongo_context = ""
     try:
-        from database import get_motor_client
-        client = get_motor_client()
-        try:
-            db = client.get_default_database()
-        except Exception:
-            db = client["test"]
+        from database.db import db
         
         mongo_events = await db["events"].find({}).to_list(None)
         if mongo_events:

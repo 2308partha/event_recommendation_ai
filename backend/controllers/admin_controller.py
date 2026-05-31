@@ -117,6 +117,7 @@ async def verify_admin(
             "name": name,
             "email": email,
             "image_url": profile_image_url,
+            "organiser_type": request_data.organiser_type,
             "college_name": request_data.college_name,
             "roll_number": request_data.roll_number,
             "year_of_study": request_data.year_of_study,
@@ -127,6 +128,8 @@ async def verify_admin(
             "club_name": request_data.club_name,
             "post": request_data.post,
             "club_note": request_data.club_note,
+            "company_name": request_data.company_name,
+            "designation": request_data.designation,
             "id_card_image_url": image_url,
             "verified": True,
             "role": "admin"

@@ -13,7 +13,13 @@ class RecommendationEngine:
         # 1. Fetch user context from MongoDB
         user_profile = await db["users"].find_one({"_id": user_id})
         if not user_profile:
-            return []
+            # Provide a generic mock profile for non-onboarded users
+            user_profile = {
+                "coordinates": [87.2913, 23.5477],
+                "college_name": "",
+                "skills": ["Tech", "Innovation"],
+                "interests": ["General"]
+            }
             
         user_coords = user_profile.get("coordinates", [87.2913, 23.5477]) # Falling back to base coordinates if unset
         user_college = user_profile.get("college_name", "") # Get user's college
